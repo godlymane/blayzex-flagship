@@ -30,7 +30,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1.5, ease: "easeOut" }}
-            className="text-8xl sm:text-9xl font-bold uppercase tracking-widest text-[#E5E5E5] text-center"
+            className="text-8xl sm:text-6xl md:text-9xl font-bold uppercase tracking-widest text-[#E5E5E5] text-center"
             style={{ fontFamily: "var(--font-oswald)" }}
           >
             FOR THE 1%

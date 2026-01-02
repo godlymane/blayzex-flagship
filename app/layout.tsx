@@ -13,8 +13,11 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "BLAYZEX - FOR THE 1%",
-  description: "Brutalist Luxury Gym Brand",
+  title: "BLAYZEX | For The 1%",
+  description: "Engineered for the war. Premium gym wear for the 1% who never give up.",
+  icons: {
+    icon: '/icon.png', // We will set this up later, but this preps the code
+  },
 };
 
 export default function RootLayout({
