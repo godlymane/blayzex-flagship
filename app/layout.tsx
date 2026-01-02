@@ -1,23 +1,23 @@
 import type { Metadata } from "next";
-import { Oswald, Inter } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import Navbar from "@/components/Navbar";
+import { Providers } from "./providers";
+import CartSidebar from "@/components/CartSidebar";
 
-const oswald = Oswald({
-  variable: "--font-oswald",
+const geistSans = Geist({
+  variable: "--font-geist-sans",
   subsets: ["latin"],
 });
 
-const inter = Inter({
-  variable: "--font-inter",
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "BLAYZEX | For The 1%",
-  description: "Engineered for the war. Premium gym wear for the 1% who never give up.",
-  icons: {
-    icon: '/icon.png', // We will set this up later, but this preps the code
-  },
+  title: "BLAYZEX | Dominate Your Ambition",
+  description: "High-performance luxury aesthetic wear. Engineered for the 1%.",
 };
 
 export default function RootLayout({
@@ -26,11 +26,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="scroll-smooth">
       <body
-        className={`${oswald.variable} ${inter.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-stone-950 text-stone-100`}
       >
-        {children}
+        <Providers>
+          <Navbar />
+          <CartSidebar />
+          {children}
+        </Providers>
       </body>
     </html>
   );
