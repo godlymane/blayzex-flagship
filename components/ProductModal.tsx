@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { X, Check, Ruler } from 'lucide-react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-// Changed to relative path
+// RELATIVE PATH FIX
 import { useCart } from '../context/CartContext';
 
 type Variant = {
@@ -49,7 +49,6 @@ export default function ProductModal({ product, onClose }: { product: Product | 
     <AnimatePresence>
       {product && (
         <>
-          {/* Backdrop */}
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -58,14 +57,12 @@ export default function ProductModal({ product, onClose }: { product: Product | 
             className="fixed inset-0 bg-black/90 backdrop-blur-md z-[80]"
           />
 
-          {/* Modal Content */}
           <motion.div 
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             className="fixed inset-0 m-auto w-full max-w-5xl h-[90vh] md:h-[600px] bg-zinc-950 border border-white/10 shadow-2xl z-[90] flex flex-col md:flex-row overflow-hidden"
           >
-            {/* Close Button */}
             <button 
               onClick={onClose}
               className="absolute top-4 right-4 z-50 p-2 bg-black/50 rounded-full text-white hover:bg-white hover:text-black transition-colors"
@@ -73,7 +70,6 @@ export default function ProductModal({ product, onClose }: { product: Product | 
               <X size={24} />
             </button>
 
-            {/* Left: Image / Size Guide Toggle */}
             <div className="relative w-full md:w-1/2 h-1/2 md:h-full bg-zinc-900 group">
               <AnimatePresence mode="wait">
                 {showSizeGuide && product.sizeGuide ? (
@@ -84,12 +80,7 @@ export default function ProductModal({ product, onClose }: { product: Product | 
                     exit={{ opacity: 0 }}
                     className="relative w-full h-full bg-white text-black p-4 flex items-center justify-center"
                   >
-                    <Image 
-                      src={product.sizeGuide} 
-                      alt="Size Guide"
-                      fill
-                      className="object-contain"
-                    />
+                    <Image src={product.sizeGuide} alt="Size Guide" fill className="object-contain" />
                   </motion.div>
                 ) : (
                   <motion.div 
@@ -99,22 +90,14 @@ export default function ProductModal({ product, onClose }: { product: Product | 
                     exit={{ opacity: 0 }}
                     className="relative w-full h-full"
                   >
-                    <Image 
-                      src={product.image} 
-                      alt={product.name}
-                      fill
-                      className="object-cover"
-                    />
+                    <Image src={product.image} alt={product.name} fill className="object-cover" />
                     <div className="absolute bottom-6 left-6">
-                      <span className="bg-red-600 text-white px-4 py-2 text-xs font-bold uppercase tracking-widest">
-                        {product.tag}
-                      </span>
+                      <span className="bg-red-600 text-white px-4 py-2 text-xs font-bold uppercase tracking-widest">{product.tag}</span>
                     </div>
                   </motion.div>
                 )}
               </AnimatePresence>
 
-              {/* Size Guide Toggle Button (Only if available) */}
               {product.sizeGuide && (
                 <button 
                   onClick={() => setShowSizeGuide(!showSizeGuide)}
@@ -125,27 +108,19 @@ export default function ProductModal({ product, onClose }: { product: Product | 
               )}
             </div>
 
-            {/* Right: Details */}
             <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center bg-zinc-950">
-              <h2 className="text-3xl md:text-5xl font-black uppercase italic tracking-tighter mb-2 text-white">
-                {product.name}
-              </h2>
+              <h2 className="text-3xl md:text-5xl font-black uppercase italic tracking-tighter mb-2 text-white">{product.name}</h2>
               <p className="text-xl text-red-500 font-light mb-8 font-mono">{product.price}</p>
               
               <p className="text-gray-400 text-sm leading-relaxed mb-8 border-l-2 border-red-600 pl-4">
                 {product.description || "Engineered for the elite. This piece combines aerospace-grade durability with high-fashion aesthetics."}
               </p>
 
-              {/* Size Selector */}
               <div className="mb-8">
                 <div className="flex justify-between items-center mb-4">
                    <span className="text-xs font-bold uppercase tracking-widest text-gray-500">Select Size</span>
-                   {/* Mobile Size Guide Trigger */}
                    {product.sizeGuide && (
-                     <button 
-                       onClick={() => setShowSizeGuide(!showSizeGuide)} 
-                       className="md:hidden text-[10px] text-red-500 underline uppercase tracking-widest"
-                     >
+                     <button onClick={() => setShowSizeGuide(!showSizeGuide)} className="md:hidden text-[10px] text-red-500 underline uppercase tracking-widest">
                        {showSizeGuide ? "Close Guide" : "Size Guide"}
                      </button>
                    )}
@@ -168,7 +143,6 @@ export default function ProductModal({ product, onClose }: { product: Product | 
                 </div>
               </div>
 
-              {/* Action Button */}
               <button 
                 onClick={handleAddToCart}
                 disabled={!selectedSize}
