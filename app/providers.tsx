@@ -1,6 +1,6 @@
 'use client';
 
-// USING RELATIVE PATH TO FIX BUILD ERROR
+// RELATIVE PATH FIX
 import { CartProvider } from '../context/CartContext';
 
 export function Providers({ children }: { children: React.ReactNode }) {
