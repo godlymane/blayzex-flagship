@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { X, Check, Ruler } from 'lucide-react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-// RELATIVE PATH FIX
+// FIX: Relative import
 import { useCart } from '../context/CartContext';
 
 type Variant = {

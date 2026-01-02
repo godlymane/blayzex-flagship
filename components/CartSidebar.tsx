@@ -1,6 +1,6 @@
 'use client';
 
-// Changed to relative path
+// FIX: Relative import
 import { useCart } from '../context/CartContext';
 import { X, Lock, ArrowRight, Trash2, RefreshCw } from 'lucide-react';
 import Image from 'next/image';
@@ -10,7 +10,6 @@ export default function CartSidebar() {
   const { cart, cartOpen, toggleCart, removeItemFromCart, clearCart, checkout } = useCart();
 
   const subtotal = cart.reduce((total, item) => {
-    // Remove currency symbol and commas before parsing
     const cleanPrice = item.price.replace(/[^0-9.]/g, '');
     const price = parseFloat(cleanPrice);
     return total + (isNaN(price) ? 0 : price) * item.quantity;
@@ -35,7 +34,6 @@ export default function CartSidebar() {
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className="fixed top-0 right-0 h-full w-full md:w-[450px] bg-zinc-950 border-l border-white/10 z-[70] shadow-2xl flex flex-col"
           >
-            {/* Header */}
             <div className="flex justify-between items-center p-6 border-b border-white/5">
               <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">
                 Your <span className="text-red-600">Arsenal</span>
@@ -50,7 +48,6 @@ export default function CartSidebar() {
               </div>
             </div>
 
-            {/* Cart Items */}
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
               {cart.length > 0 ? (
                 cart.map((item, idx) => (
@@ -84,12 +81,10 @@ export default function CartSidebar() {
               )}
             </div>
 
-            {/* Checkout */}
             {cart.length > 0 && (
               <div className="p-6 border-t border-white/10 bg-black">
                 <div className="flex justify-between text-white text-sm uppercase tracking-widest mb-4">
                   <span>Subtotal</span>
-                  {/* Display Subtotal formatted */}
                   <span>₹{subtotal.toLocaleString('en-IN')}</span>
                 </div>
                 <button 
