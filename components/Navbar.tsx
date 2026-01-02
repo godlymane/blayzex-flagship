@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { ShoppingBag, Menu, X, User } from 'lucide-react';
 import Link from 'next/link';
-import { useCart } from '@/context/CartContext';
+import { useCart } from "../context/CartContext";
+
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
