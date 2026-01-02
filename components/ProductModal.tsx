@@ -4,7 +4,8 @@ import React, { useState } from 'react';
 import { X, Check, Ruler } from 'lucide-react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useCart } from '@/context/CartContext';
+// Changed to relative path
+import { useCart } from '../context/CartContext';
 
 type Variant = {
   size: string;
@@ -18,7 +19,7 @@ type Product = {
   tag: string;
   description?: string;
   variants: Variant[];
-  sizeGuide?: string; // Optional Size Guide Image URL
+  sizeGuide?: string; 
 };
 
 export default function ProductModal({ product, onClose }: { product: Product | null, onClose: () => void }) {

@@ -20,16 +20,6 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // SCROLL FUNCTION
-  const scrollToShop = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setMobileMenuOpen(false); // Close mobile menu if open
-    const section = document.getElementById('the-drop');
-    if (section) {
-      section.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
   return (
     <nav 
       className={`fixed w-full z-50 transition-all duration-500 border-b ${
@@ -49,8 +39,8 @@ export default function Navbar() {
 
         {/* Desktop Links - Left */}
         <div className="hidden md:flex items-center gap-8 text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">
-          <a href="#the-drop" onClick={scrollToShop} className="hover:text-white hover:glow-text transition-all duration-300 cursor-pointer">Shop All</a>
-          <a href="#the-drop" onClick={scrollToShop} className="hover:text-white hover:glow-text transition-all duration-300 cursor-pointer">New Arrivals</a>
+          <Link href="#" className="hover:text-white hover:glow-text transition-all duration-300">Shop All</Link>
+          <Link href="#" className="hover:text-white hover:glow-text transition-all duration-300">New Arrivals</Link>
         </div>
 
         {/* Center: BRAND TEXT (Clean Luxury) */}
@@ -80,8 +70,8 @@ export default function Navbar() {
       {/* Mobile Menu */}
       {mobileMenuOpen && (
         <div className="absolute top-full left-0 w-full bg-black/95 backdrop-blur-xl border-t border-white/10 p-6 flex flex-col gap-8 md:hidden h-screen z-40">
-          <a href="#the-drop" onClick={scrollToShop} className="text-3xl font-black uppercase italic text-white hover:text-red-600 tracking-tighter">Shop All</a>
-          <a href="#the-drop" onClick={scrollToShop} className="text-3xl font-black uppercase italic text-white hover:text-red-600 tracking-tighter">New Arrivals</a>
+          <Link href="#" className="text-3xl font-black uppercase italic text-white hover:text-red-600 tracking-tighter">Shop All</Link>
+          <Link href="#" className="text-3xl font-black uppercase italic text-white hover:text-red-600 tracking-tighter">New Arrivals</Link>
           <Link href="#" className="text-xl font-mono uppercase text-gray-500 mt-auto">Account Login</Link>
         </div>
       )}

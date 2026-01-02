@@ -1,16 +1,19 @@
 'use client';
 
-import { useCart } from '@/context/CartContext';
-import { X, Lock, ArrowRight, Trash2 } from 'lucide-react';
+// Changed to relative path
+import { useCart } from '../context/CartContext';
+import { X, Lock, ArrowRight, Trash2, RefreshCw } from 'lucide-react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function CartSidebar() {
-  const { cart, cartOpen, toggleCart, removeItemFromCart, checkout } = useCart();
+  const { cart, cartOpen, toggleCart, removeItemFromCart, clearCart, checkout } = useCart();
 
   const subtotal = cart.reduce((total, item) => {
-    const price = parseFloat(item.price.replace('$', '').replace(',', ''));
-    return total + price * item.quantity;
+    // Remove currency symbol and commas before parsing
+    const cleanPrice = item.price.replace(/[^0-9.]/g, '');
+    const price = parseFloat(cleanPrice);
+    return total + (isNaN(price) ? 0 : price) * item.quantity;
   }, 0);
 
   return (
@@ -32,15 +35,22 @@ export default function CartSidebar() {
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className="fixed top-0 right-0 h-full w-full md:w-[450px] bg-zinc-950 border-l border-white/10 z-[70] shadow-2xl flex flex-col"
           >
+            {/* Header */}
             <div className="flex justify-between items-center p-6 border-b border-white/5">
               <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">
                 Your <span className="text-red-600">Arsenal</span>
               </h2>
-              <button onClick={toggleCart} className="text-gray-400 hover:text-white">
-                <X size={24} />
-              </button>
+              <div className="flex items-center gap-4">
+                <button onClick={clearCart} className="text-xs text-gray-500 hover:text-red-500 uppercase tracking-widest flex items-center gap-1">
+                  <RefreshCw size={12} /> Clear
+                </button>
+                <button onClick={toggleCart} className="text-gray-400 hover:text-white">
+                  <X size={24} />
+                </button>
+              </div>
             </div>
 
+            {/* Cart Items */}
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
               {cart.length > 0 ? (
                 cart.map((item, idx) => (
@@ -74,11 +84,13 @@ export default function CartSidebar() {
               )}
             </div>
 
+            {/* Checkout */}
             {cart.length > 0 && (
               <div className="p-6 border-t border-white/10 bg-black">
                 <div className="flex justify-between text-white text-sm uppercase tracking-widest mb-4">
                   <span>Subtotal</span>
-                  <span>${subtotal.toFixed(2)}</span>
+                  {/* Display Subtotal formatted */}
+                  <span>₹{subtotal.toLocaleString('en-IN')}</span>
                 </div>
                 <button 
                   onClick={checkout}
