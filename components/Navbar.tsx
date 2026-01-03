@@ -1,85 +1,137 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ShoppingBag, Menu, X, User } from 'lucide-react';
 import Link from 'next/link';
-// FIX: Relative import
+import { usePathname } from 'next/navigation';
 import { useCart } from '../context/CartContext';
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { toggleCart, cart } = useCart(); 
-
-  const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
+  const [isMounted, setIsMounted] = useState(false);
+  
+  const { toggleCart, cart } = useCart();
+  const pathname = usePathname();
 
   useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    let ticking = false;
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          setIsScrolled(window.scrollY > 10);
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const scrollToShop = (e: React.MouseEvent) => {
-    e.preventDefault();
+  useEffect(() => {
     setMobileMenuOpen(false);
-    const section = document.getElementById('the-drop');
-    if (section) {
-      section.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
+  }, [pathname]);
+
+  const totalItems = useMemo(() => {
+    return cart.reduce((acc, item) => acc + item.quantity, 0);
+  }, [cart]);
 
   return (
-    <nav 
-      className={`fixed w-full z-50 transition-all duration-500 border-b ${
-        isScrolled 
-          ? 'bg-black/50 backdrop-blur-xl backdrop-saturate-150 border-white/10 py-4 shadow-[0_4px_30px_rgba(0,0,0,0.5)]' 
-          : 'bg-transparent border-transparent py-8'
-      }`}
-    >
-      <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
-        <button 
-          className="md:hidden text-white hover:text-red-500 transition-colors"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        >
-          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
+    <>
+      {/* Responsive Capsule Navigation 
+        - Mobile: Slightly wider (95%), closer to top (top-4), flex layout for safety.
+        - Desktop: Standard (90%), top-6, grid layout for precision centering.
+      */}
+      <nav 
+        aria-label="Main Navigation"
+        className={`
+          fixed z-50 
+          left-1/2 -translate-x-1/2
+          transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]
+          
+          /* Mobile Specifics */
+          top-4 w-[95%] px-4 flex justify-between items-center
+          
+          /* Desktop Specifics */
+          md:top-6 md:w-[90%] md:max-w-5xl md:grid md:grid-cols-3 md:px-6 md:justify-items-center
 
-        <div className="hidden md:flex items-center gap-8 text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">
-          <a href="#the-drop" onClick={scrollToShop} className="hover:text-white hover:glow-text transition-all duration-300 cursor-pointer">Shop All</a>
-          <a href="#the-drop" onClick={scrollToShop} className="hover:text-white hover:glow-text transition-all duration-300 cursor-pointer">New Arrivals</a>
+          rounded-full
+          ${isScrolled 
+            ? 'h-14 bg-black/40 backdrop-blur-2xl backdrop-saturate-200 border border-white/15 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.8)]' 
+            : 'h-16 bg-transparent border border-transparent'
+          }
+        `}
+      >
+        
+        {/* LEFT: MENU TOGGLE */}
+        <div className="flex items-center justify-start shrink-0 md:w-full">
+          <button 
+            className="text-zinc-400 hover:text-white transition-colors active:scale-90 p-2 -ml-2 md:ml-0 hover:bg-white/5 rounded-full"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle Menu"
+          >
+            {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
         </div>
 
-        <Link href="/" className="absolute left-1/2 -translate-x-1/2 group">
-           <span className="text-2xl md:text-3xl font-black tracking-tighter uppercase italic text-white group-hover:text-red-500 transition-colors duration-300">
-             Blayzex<span className="text-red-600 group-hover:text-white transition-colors duration-300">.</span>
-           </span>
-        </Link>
+        {/* CENTER: LOGO */}
+        {/* Absolute centering on mobile to ensure it never drifts */}
+        <div className="absolute left-1/2 -translate-x-1/2 md:static md:translate-x-0 flex items-center justify-center">
+            <Link href="/" className="group flex items-center justify-center" aria-label="Home">
+                <span className="text-lg md:text-2xl font-black tracking-tighter uppercase italic text-white transition-colors duration-300 whitespace-nowrap">
+                Blayzex
+                <span className="text-red-600 drop-shadow-[0_0_8px_rgba(220,38,38,0.8)] inline-block ml-0.5 animate-pulse">.</span>
+                </span>
+            </Link>
+        </div>
 
-        <div className="flex items-center gap-6">
-          <button className="hidden md:block text-gray-400 hover:text-white transition-colors">
-            <User size={20} />
-          </button>
+        {/* RIGHT: ACTIONS */}
+        <div className="flex items-center justify-end gap-1 md:gap-4 shrink-0 md:w-full">
+          <Link 
+            href="/admin" 
+            className="hidden md:flex items-center justify-center w-9 h-9 rounded-full hover:bg-white/5 text-zinc-400 hover:text-white transition-all" 
+            aria-label="Account"
+          >
+            <User size={18} />
+          </Link>
           
-          <button onClick={toggleCart} className="relative text-white group">
+          <button 
+            onClick={toggleCart} 
+            className="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-white/5 text-zinc-400 hover:text-white transition-all group -mr-2 md:mr-0"
+            aria-label={`Open Cart (${totalItems} items)`}
+          >
             <ShoppingBag size={20} className="group-hover:text-red-500 transition-colors duration-300" />
-            {totalItems > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-red-600 text-[8px] font-bold animate-pulse">
-                {totalItems}
+            
+            {isMounted && totalItems > 0 && (
+              <span className="absolute top-1.5 right-1.5 flex h-2 w-2 items-center justify-center rounded-full bg-red-600 shadow-[0_0_8px_red] animate-pulse">
               </span>
             )}
           </button>
         </div>
-      </div>
+      </nav>
 
-      {mobileMenuOpen && (
-        <div className="absolute top-full left-0 w-full bg-black/95 backdrop-blur-xl border-t border-white/10 p-6 flex flex-col gap-8 md:hidden h-screen z-40">
-          <a href="#the-drop" onClick={scrollToShop} className="text-3xl font-black uppercase italic text-white hover:text-red-600 tracking-tighter">Shop All</a>
-          <a href="#the-drop" onClick={scrollToShop} className="text-3xl font-black uppercase italic text-white hover:text-red-600 tracking-tighter">New Arrivals</a>
-          <Link href="#" className="text-xl font-mono uppercase text-gray-500 mt-auto">Account Login</Link>
-        </div>
-      )}
-    </nav>
+      {/* MOBILE COMMAND MENU OVERLAY */}
+      <div 
+        className={`
+          fixed inset-0 z-40 bg-black/95 backdrop-blur-3xl 
+          flex flex-col items-center justify-center gap-8
+          transition-all duration-300 ease-in-out
+          ${mobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}
+        `}
+      >
+        <Link 
+          href="/admin" 
+          className="text-2xl font-black uppercase italic text-zinc-500 hover:text-white transition-colors tracking-tighter"
+          onClick={() => setMobileMenuOpen(false)}
+        >
+          Access Terminal
+        </Link>
+      </div>
+    </>
   );
 }

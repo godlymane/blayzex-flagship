@@ -12,6 +12,8 @@
 
 html {
   scroll-behavior: smooth;
+  /* SYSTEM UPGRADE: Ensures anchor links don't get hidden behind the fixed navbar */
+  scroll-padding-top: 100px; 
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -25,31 +27,26 @@ body {
 }
 
 /* --- CINEMATIC SELECTION --- */
-/* When user highlights text, it looks like a scanner */
 ::selection {
-  background-color: #dc2626; /* Red 600 */
+  background-color: #dc2626; 
   color: #ffffff;
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
 }
 
 /* --- INVISIBLE/LUXURY SCROLLBAR --- */
-/* Works on Chrome/Safari/Edge */
 ::-webkit-scrollbar {
-  width: 4px; /* Ultra thin */
+  width: 4px;
 }
-
 ::-webkit-scrollbar-track {
   background: transparent;
 }
-
 ::-webkit-scrollbar-thumb {
   background: #333333;
   border-radius: 2px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
   background: #dc2626;
-  box-shadow: 0 0 10px #dc2626; /* Glowing scrollbar on hover */
+  box-shadow: 0 0 10px #dc2626;
 }
 
 /* --- ANIMATIONS --- */
@@ -60,14 +57,15 @@ body {
 
 .animate-marquee {
   display: inline-block;
-  animation: marquee 30s linear infinite; /* Slower, more elegant speed */
+  animation: marquee 30s linear infinite;
   white-space: nowrap;
 }
 
-/* Utility for glass panels if needed elsewhere */
+/* Utility for glass panels */
 .glass-panel {
   background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.05);
+  will-change: transform; /* Hint for browser performance */
 }

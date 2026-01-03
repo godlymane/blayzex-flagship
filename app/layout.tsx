@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-// RELATIVE IMPORTS TO FIX BUILD ERRORS
 import Navbar from "../components/Navbar";
 import CartSidebar from "../components/CartSidebar";
 import { Providers } from "./providers";
-// CRITICAL IMPORT FOR RAZORPAY
 import Script from "next/script";
+import { ToastProvider } from "../context/ToastContext"; // New Import
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,14 +35,21 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-stone-950 text-stone-100`}
       >
-        {/* Razorpay Script - Must be inside body */}
         <Script src="https://checkout.razorpay.com/v1/checkout.js" />
         
-        <Providers>
-          <Navbar />
-          <CartSidebar />
-          {children}
-        </Providers>
+        {/* Wrap ToastProvider INSIDE or OUTSIDE Providers depending on preference, 
+            but usually needs to wrap components using it. 
+            Since Providers wraps CartProvider which uses Toast, ToastProvider must be parent or inside Providers. 
+            Let's put it inside Providers for cleaner code in this file, or update Providers.tsx.
+            Actually, let's update this file to wrap Providers with ToastProvider. 
+        */}
+        <ToastProvider>
+            <Providers>
+            <Navbar />
+            <CartSidebar />
+            {children}
+            </Providers>
+        </ToastProvider>
       </body>
     </html>
   );

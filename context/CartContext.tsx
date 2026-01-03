@@ -1,8 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-// IMPORT THE NEW MODAL WITH RELATIVE PATH
-import CheckoutModal from '../components/CheckoutModal'; 
+import { useToast } from './ToastContext'; 
 
 type CartItem = {
   id: string;       
@@ -16,11 +15,13 @@ type CartItem = {
 type CartContextType = {
   cart: CartItem[];
   cartOpen: boolean;
+  isCheckoutOpen: boolean; 
   toggleCart: () => void;
   addItemToCart: (item: Omit<CartItem, 'quantity'>) => void;
   removeItemFromCart: (id: string, size: string) => void;
   clearCart: () => void;
   checkout: () => void;
+  closeCheckout: () => void;
 };
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -28,18 +29,22 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
-  
-  // NEW STATE FOR CHECKOUT MODAL
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  
+  const { showToast } = useToast(); 
 
   useEffect(() => {
+    setIsMounted(true);
     const savedCart = localStorage.getItem('blayzex_cart');
     if (savedCart) setCart(JSON.parse(savedCart));
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('blayzex_cart', JSON.stringify(cart));
-  }, [cart]);
+    if (isMounted) {
+      localStorage.setItem('blayzex_cart', JSON.stringify(cart));
+    }
+  }, [cart, isMounted]);
 
   const toggleCart = () => setCartOpen(!cartOpen);
 
@@ -56,36 +61,37 @@ export function CartProvider({ children }: { children: ReactNode }) {
       return [...prev, { ...product, quantity: 1 }];
     });
     setCartOpen(true);
+    showToast(`${product.name} Added to Loadout`, 'success');
   };
 
   const removeItemFromCart = (id: string, size: string) => {
     setCart((prev) => prev.filter((item) => !(item.id === id && item.size === size)));
+    showToast('Item Ejected', 'info');
   };
 
   const clearCart = () => {
     setCart([]);
-    localStorage.removeItem('blayzex_cart');
+    if (isMounted) localStorage.removeItem('blayzex_cart');
   };
 
-  // --- THE CRITICAL UPDATE ---
-  // Old Version: Redirected to Shopify
-  // New Version: Opens the Custom Checkout Modal
   const checkout = () => {
     if (cart.length === 0) {
-      alert("Cart is empty");
+      showToast("Cart is Empty", "error");
       return;
     }
-    setCartOpen(false); // Close the side drawer
-    setIsCheckoutOpen(true); // Open the Razorpay/Address form
+    setCartOpen(false);
+    setIsCheckoutOpen(true);
   };
 
+  const closeCheckout = () => {
+      setIsCheckoutOpen(false);
+  };
+
+  // FIX: Always render the Provider. 
+  // Rely on useEffect for data hydration instead of conditional rendering.
   return (
-    <CartContext.Provider value={{ cart, cartOpen, toggleCart, addItemToCart, removeItemFromCart, clearCart, checkout }}>
+    <CartContext.Provider value={{ cart, cartOpen, isCheckoutOpen, toggleCart, addItemToCart, removeItemFromCart, clearCart, checkout, closeCheckout }}>
       {children}
-      
-      {/* RENDER THE MODAL HERE SO IT IS AVAILABLE GLOBALLY */}
-      <CheckoutModal isOpen={isCheckoutOpen} onClose={() => setIsCheckoutOpen(false)} />
-      
     </CartContext.Provider>
   );
 }

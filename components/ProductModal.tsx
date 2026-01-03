@@ -1,162 +1,208 @@
 'use client';
 
-import React, { useState } from 'react';
-import { X, Check, Ruler } from 'lucide-react';
-import Image from 'next/image';
+import React, { useState, useEffect } from 'react';
+import { X, ShoppingBag, Star, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-// FIX: Relative import
 import { useCart } from '../context/CartContext';
+import Image from 'next/image';
 
-type Variant = {
+interface Variant {
   size: string;
   id: string;
-};
+}
 
-type Product = {
+interface Product {
+  id: string;
   name: string;
   price: string;
+  category: string;
   image: string;
   tag: string;
-  description?: string;
+  description: string;
   variants: Variant[];
-  sizeGuide?: string; 
-};
+}
 
-export default function ProductModal({ product, onClose }: { product: Product | null, onClose: () => void }) {
+interface ProductModalProps {
+  product: Product | null;
+  onClose: () => void;
+}
+
+export default function ProductModal({ product, onClose }: ProductModalProps) {
   const { addItemToCart } = useCart();
-  const [selectedSize, setSelectedSize] = useState<string | null>(null);
-  const [showSizeGuide, setShowSizeGuide] = useState(false);
+  const [selectedSize, setSelectedSize] = useState<string>("");
+  const [isAdding, setIsAdding] = useState(false);
 
-  if (!product) return null;
+  useEffect(() => {
+    if (product) {
+        if (product.variants && product.variants.length > 0) {
+            setSelectedSize(product.variants[0].size);
+        }
+    }
+  }, [product]);
 
   const handleAddToCart = () => {
-    if (!selectedSize) return;
+    if (!product || !selectedSize) return;
     
-    const variant = product.variants.find(v => v.size === selectedSize);
-    if (!variant) return;
-
-    addItemToCart({
-      id: variant.id,
-      name: product.name,
-      price: product.price,
-      image: product.image,
-      size: selectedSize
-    });
-    onClose();
+    setIsAdding(true);
+    setTimeout(() => {
+        addItemToCart({
+            id: product.id,
+            name: product.name,
+            price: product.price,
+            image: product.image,
+            size: selectedSize,
+        });
+        setIsAdding(false);
+        onClose();
+    }, 500);
   };
+
+  // Close on Escape key
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [onClose]);
+
+  if (!product) return null;
 
   return (
     <AnimatePresence>
       {product && (
-        <>
+        <div className="fixed inset-0 z-[999] flex items-end sm:items-center justify-center isolate">
+          
+          {/* Backdrop */}
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-black/80 backdrop-blur-md"
             onClick={onClose}
-            className="fixed inset-0 bg-black/90 backdrop-blur-md z-[80]"
           />
 
+          {/* Modal Container */}
           <motion.div 
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="fixed inset-0 m-auto w-full max-w-5xl h-[90vh] md:h-[600px] bg-zinc-950 border border-white/10 shadow-2xl z-[90] flex flex-col md:flex-row overflow-hidden"
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="
+                relative w-full max-w-5xl bg-zinc-950 text-white shadow-2xl
+                flex flex-col sm:flex-row overflow-hidden
+                h-[100dvh] sm:h-auto sm:max-h-[85vh] 
+                sm:rounded-xl border border-zinc-800
+            "
           >
+            
+            {/* Close Button - Optimized for Thumb Reach */}
             <button 
               onClick={onClose}
-              className="absolute top-4 right-4 z-50 p-2 bg-black/50 rounded-full text-white hover:bg-white hover:text-black transition-colors"
+              className="absolute top-4 right-4 z-50 p-2.5 bg-black/60 backdrop-blur-xl rounded-full border border-white/10 text-white hover:bg-white hover:text-black transition-all active:scale-90 shadow-lg"
             >
-              <X size={24} />
+              <X size={22} />
             </button>
 
-            <div className="relative w-full md:w-1/2 h-1/2 md:h-full bg-zinc-900 group">
-              <AnimatePresence mode="wait">
-                {showSizeGuide && product.sizeGuide ? (
-                  <motion.div 
-                    key="size-guide"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="relative w-full h-full bg-white text-black p-4 flex items-center justify-center"
-                  >
-                    <Image src={product.sizeGuide} alt="Size Guide" fill className="object-contain" />
-                  </motion.div>
-                ) : (
-                  <motion.div 
-                    key="product-image"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="relative w-full h-full"
-                  >
-                    <Image src={product.image} alt={product.name} fill className="object-cover" />
-                    <div className="absolute bottom-6 left-6">
-                      <span className="bg-red-600 text-white px-4 py-2 text-xs font-bold uppercase tracking-widest">{product.tag}</span>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+            {/* --- VISUALS --- */}
+            <div className="w-full h-[40dvh] sm:h-[550px] sm:w-[55%] bg-zinc-900 relative shrink-0">
+              <div className="absolute top-6 left-6 z-10 flex gap-2">
+                <span className="bg-red-600 text-white text-[10px] font-bold px-3 py-1 tracking-widest uppercase shadow-lg shadow-red-900/20">
+                  {product.category}
+                </span>
+                <span className="bg-black/50 backdrop-blur text-white text-[10px] font-bold px-3 py-1 tracking-widest uppercase border border-white/10">
+                  {product.tag}
+                </span>
+              </div>
 
-              {product.sizeGuide && (
-                <button 
-                  onClick={() => setShowSizeGuide(!showSizeGuide)}
-                  className="absolute bottom-6 right-6 bg-black/50 backdrop-blur-md text-white px-4 py-2 text-[10px] font-bold uppercase tracking-widest border border-white/20 hover:bg-white hover:text-black hover:border-transparent transition-all flex items-center gap-2 z-20"
-                >
-                  <Ruler size={14} /> {showSizeGuide ? "View Product" : "Size Guide"}
-                </button>
-              )}
+              {/* Image Container - Using object-fit: cover for perfect mobile fit */}
+              <div className="relative w-full h-full">
+                <Image 
+                    src={product.image} 
+                    alt={product.name} 
+                    fill
+                    className="object-cover object-center"
+                    priority
+                />
+                {/* Gradient Overlay for Text Readability if needed, but keeping it clean for now */}
+                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent sm:bg-gradient-to-b sm:from-transparent sm:to-zinc-950/20 pointer-events-none" />
+              </div>
             </div>
 
-            <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center bg-zinc-950">
-              <h2 className="text-3xl md:text-5xl font-black uppercase italic tracking-tighter mb-2 text-white">{product.name}</h2>
-              <p className="text-xl text-red-500 font-light mb-8 font-mono">{product.price}</p>
+            {/* --- CONTENT --- */}
+            <div className="w-full h-[60dvh] sm:h-auto sm:w-[45%] flex flex-col bg-zinc-950 border-l border-zinc-800 relative">
               
-              <p className="text-gray-400 text-sm leading-relaxed mb-8 border-l-2 border-red-600 pl-4">
-                {product.description || "Engineered for the elite. This piece combines aerospace-grade durability with high-fashion aesthetics."}
-              </p>
-
-              <div className="mb-8">
-                <div className="flex justify-between items-center mb-4">
-                   <span className="text-xs font-bold uppercase tracking-widest text-gray-500">Select Size</span>
-                   {product.sizeGuide && (
-                     <button onClick={() => setShowSizeGuide(!showSizeGuide)} className="md:hidden text-[10px] text-red-500 underline uppercase tracking-widest">
-                       {showSizeGuide ? "Close Guide" : "Size Guide"}
-                     </button>
-                   )}
+              {/* Scrollable Details */}
+              <div className="flex-1 overflow-y-auto p-6 sm:p-8 pb-32 sm:pb-8 custom-scrollbar">
+                <div className="flex items-center gap-2 mb-2 text-zinc-500 text-xs font-mono tracking-[0.2em] uppercase">
+                  <Zap size={12} className="text-red-500" />
+                  BLAYZEX // {product.id.split('-')[1]?.toUpperCase() || 'CORE'}
                 </div>
-                
-                <div className="flex gap-4">
-                  {product.variants.map((variant) => (
-                    <button
-                      key={variant.size}
-                      onClick={() => setSelectedSize(variant.size)}
-                      className={`w-12 h-12 flex items-center justify-center border text-sm font-bold transition-all uppercase ${
-                        selectedSize === variant.size 
-                          ? 'bg-white text-black border-white' 
-                          : 'bg-transparent text-gray-500 border-white/20 hover:border-white hover:text-white'
-                      }`}
-                    >
-                      {variant.size}
-                    </button>
-                  ))}
+
+                <h1 className="text-2xl sm:text-4xl font-black text-white uppercase italic leading-none mb-3">
+                    {product.name}
+                </h1>
+
+                <div className="flex items-center gap-4 mb-6">
+                  <span className="text-xl sm:text-2xl font-bold text-red-500 font-mono">{product.price}</span>
+                  <div className="h-4 w-px bg-zinc-800"></div>
+                  <div className="flex items-center gap-1 text-sm text-zinc-400">
+                    <Star size={14} className="fill-zinc-400" />
+                    <span>5.0</span>
+                  </div>
+                </div>
+
+                <p className="text-zinc-400 text-sm leading-relaxed mb-8 border-l-2 border-red-600 pl-4">
+                    {product.description}
+                </p>
+
+                {/* Variant Selector - Bigger Touch Targets */}
+                <div className="space-y-6">
+                  <div>
+                    <div className="flex justify-between mb-3">
+                       <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Select Size</label>
+                    </div>
+                    <div className="grid grid-cols-4 gap-3 sm:gap-2">
+                      {product.variants.map((variant, idx) => (
+                        <button 
+                            key={`${variant.id}-${idx}`} 
+                            onClick={() => setSelectedSize(variant.size)} 
+                            className={`
+                                py-4 sm:py-3 text-sm font-bold border transition-all relative overflow-hidden group rounded-sm
+                                ${selectedSize === variant.size 
+                                    ? 'bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)] scale-[1.02]' 
+                                    : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:border-zinc-600 active:bg-zinc-800'
+                                }
+                            `}
+                        >
+                          <span className="relative z-10">{variant.size}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <button 
-                onClick={handleAddToCart}
-                disabled={!selectedSize}
-                className={`w-full py-5 text-xs font-bold uppercase tracking-[0.2em] transition-all duration-300 ${
-                  selectedSize 
-                    ? 'bg-red-600 text-white hover:bg-white hover:text-black cursor-pointer' 
-                    : 'bg-zinc-800 text-gray-500 cursor-not-allowed'
-                }`}
-              >
-                {selectedSize ? 'Add to Arsenal' : 'Select a Size'}
-              </button>
+              {/* Sticky Bottom Action Bar */}
+              <div className="absolute bottom-0 left-0 right-0 bg-[#09090b] border-t border-white/10 p-4 sm:p-6 z-30 pb-safe">
+                <button 
+                    onClick={handleAddToCart}
+                    disabled={isAdding}
+                    className="w-full bg-red-600 text-white h-14 font-bold uppercase tracking-widest hover:bg-red-500 active:scale-[0.98] transition-all flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(220,38,38,0.4)] disabled:opacity-70 disabled:cursor-wait rounded-sm"
+                >
+                    {isAdding ? (
+                        <>PROCESSING...</>
+                    ) : (
+                        <>
+                            <ShoppingBag size={18} />
+                            <span>Add to Loadout</span>
+                        </>
+                    )}
+                </button>
+              </div>
             </div>
           </motion.div>
-        </>
+        </div>
       )}
     </AnimatePresence>
   );
