@@ -1,12 +1,15 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ArrowRight, Lock, Crown, Crosshair, Check } from 'lucide-react';
+import { ArrowRight, Lock, Crown, Crosshair, Check, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
-import ProductModal from '@/components/ProductModal';
+// Relative imports to prevent build errors
+import ProductModal from '../components/ProductModal';
 
-// --- LAUNCH INVENTORY CONFIGURATION ---
+// --- CONFIGURATION ---
+const STORE_PASSWORD = "1PERCENT"; // <--- CHANGE THIS PASSWORD HERE
+
 const PRODUCTS = [
   // --- TEES & TANKS ---
   {
@@ -116,16 +119,15 @@ const CATEGORIES = ["All", "Tees", "Hoodies", "Sweatshirts", "Pants", "Shorts", 
 export default function Home() {
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
   const [activeCategory, setActiveCategory] = useState("All");
-  const [loading, setLoading] = useState(true);
   const [manifestoOpen, setManifestoOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
-
-  // PRELOADER SEQUENCE
-  useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 2000); 
-    return () => clearTimeout(timer);
-  }, []);
+  
+  // --- PASSWORD LOCK STATE ---
+  const [isLocked, setIsLocked] = useState(true);
+  const [passwordInput, setPasswordInput] = useState("");
+  const [shake, setShake] = useState(false);
+  const [unlocking, setUnlocking] = useState(false);
 
   const filteredProducts = activeCategory === "All" 
     ? PRODUCTS 
@@ -145,83 +147,80 @@ export default function Home() {
     }
   };
 
+  const handleUnlock = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (passwordInput.toUpperCase() === STORE_PASSWORD) {
+      setUnlocking(true);
+      setTimeout(() => setIsLocked(false), 1500); // Wait for animation
+    } else {
+      setShake(true);
+      setTimeout(() => setShake(false), 400);
+      setPasswordInput("");
+    }
+  };
+
   return (
-    <main className={`min-h-screen bg-black text-white selection:bg-red-600 selection:text-white relative ${loading ? 'overflow-hidden h-screen' : ''}`}>
+    <main className={`min-h-screen bg-black text-white selection:bg-red-600 selection:text-white relative ${isLocked ? 'overflow-hidden h-screen' : ''}`}>
       
-      {/* --- CINEMATIC PRELOADER --- */}
+      {/* --- PASSWORD LOCK SCREEN --- */}
       <AnimatePresence>
-        {loading && (
+        {isLocked && (
           <motion.div 
             initial={{ opacity: 1 }}
-            exit={{ opacity: 0, transition: { duration: 0.8, ease: "easeInOut" } }}
-            className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center"
+            exit={{ opacity: 0, y: -50, transition: { duration: 0.8, ease: "easeInOut" } }}
+            className="fixed inset-0 z-[200] bg-black flex flex-col items-center justify-center p-6"
           >
-            <motion.div 
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 1, repeat: Infinity, repeatType: "reverse" }}
-              className="relative w-32 h-32 mb-8"
-            >
-               {/* Ensure logo.png is in public folder */}
-               <Image src="/logo.png" alt="Loading" fill className="object-contain" priority />
-            </motion.div>
-            <div className="w-64 h-[2px] bg-zinc-900 rounded-full overflow-hidden relative">
-              <motion.div 
-                initial={{ width: "0%" }}
-                animate={{ width: "100%" }}
-                transition={{ duration: 1.8, ease: "easeInOut" }}
-                className="absolute top-0 left-0 h-full bg-red-600"
-              />
+            {/* Background Video for Lock Screen */}
+            <div className="absolute inset-0 z-0">
+               <video autoPlay loop muted playsInline className="w-full h-full object-cover opacity-20 grayscale">
+                  <source src="/hero.mp4" type="video/mp4" />
+               </video>
+               <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
             </div>
-            <div className="mt-4 font-mono text-[10px] text-red-600 tracking-[0.3em] uppercase animate-pulse">
-              System_Initializing...
+
+            <div className="relative z-10 w-full max-w-md text-center">
+               <motion.div 
+                 initial={{ scale: 0.9, opacity: 0 }}
+                 animate={{ scale: 1, opacity: 1 }}
+                 transition={{ duration: 1 }}
+                 className="relative w-24 h-24 mx-auto mb-8"
+               >
+                  <Image src="/logo.png" alt="BLAYZEX" fill className="object-contain" priority />
+               </motion.div>
+
+               <h1 className="text-xl md:text-2xl font-black uppercase tracking-widest mb-2">Restricted Access</h1>
+               <p className="text-xs text-gray-500 font-mono mb-8">ENTER PASSWORD TO ACCESS THE DROP</p>
+
+               <form onSubmit={handleUnlock} className={`relative ${shake ? 'animate-shake' : ''}`}>
+                  <input 
+                    type="password" 
+                    value={passwordInput}
+                    onChange={(e) => setPasswordInput(e.target.value)}
+                    placeholder="PASSWORD"
+                    className="w-full bg-transparent border-b border-zinc-700 text-center text-xl font-mono tracking-[0.5em] py-4 focus:outline-none focus:border-red-600 transition-colors uppercase text-white placeholder-zinc-800"
+                    autoFocus
+                  />
+                  <button 
+                    type="submit"
+                    className="mt-8 text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-red-600 transition-colors flex items-center justify-center gap-2 mx-auto"
+                  >
+                    {unlocking ? "ACCESS GRANTED..." : "ENTER SYSTEM"} <ArrowRight size={14} />
+                  </button>
+               </form>
+
+               {unlocking && (
+                 <motion.div 
+                   initial={{ width: "0%" }}
+                   animate={{ width: "100%" }}
+                   className="h-[1px] bg-red-600 mt-8 mx-auto"
+                 />
+               )}
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* --- MANIFESTO MODAL --- */}
-      <AnimatePresence>
-        {manifestoOpen && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setManifestoOpen(false)}
-            className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-2xl flex items-center justify-center p-6 cursor-pointer"
-          >
-            <motion.div 
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              className="max-w-2xl w-full border border-white/10 bg-zinc-900/50 p-8 md:p-16 relative overflow-hidden"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-red-600 to-transparent"></div>
-              <div className="absolute top-4 right-4 text-[10px] text-zinc-500 font-mono">DOC_REF: 001-ALPHA</div>
-              
-              <div className="text-center">
-                <Crown className="w-12 h-12 text-red-600 mx-auto mb-8" />
-                <h2 className="text-3xl md:text-5xl font-black uppercase italic tracking-tighter mb-8 leading-none">
-                  The <span className="text-red-600">1%</span> Doctrine
-                </h2>
-                <div className="text-gray-300 font-mono text-xs md:text-sm leading-relaxed space-y-6 text-justify">
-                  <p><span className="text-red-600 font-bold">Mediocrity is a disease.</span> Blayzex is the cure. We do not design for the masses; we design for the obsessed.</p>
-                  <p>Every garment is a piece of engineering, stress-tested to endure the darkest places you go to find your light. We use materials usually reserved for tactical warfare, repurposed for your personal war against average.</p>
-                  <p>If you are looking for comfort, go elsewhere. If you are looking for equipment that respects your ambition, welcome home.</p>
-                </div>
-                <button 
-                  onClick={() => setManifestoOpen(false)}
-                  className="mt-12 text-red-600 text-[10px] font-bold uppercase tracking-[0.3em] hover:text-white transition-colors border-b border-transparent hover:border-white pb-1"
-                >
-                  [ ACKNOWLEDGE & CLOSE ]
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
+      {/* Global Texture */}
       <div className="fixed inset-0 pointer-events-none z-30 opacity-[0.03] bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-overlay"></div>
 
       <ProductModal product={selectedProduct} onClose={() => setSelectedProduct(null)} />
@@ -240,7 +239,7 @@ export default function Home() {
         <div className="relative z-20 text-center px-4 max-w-7xl mx-auto flex flex-col items-center">
           <motion.div 
             initial={{ opacity: 0, scale: 0.8, y: 30 }} 
-            animate={!loading ? { opacity: 1, scale: 1, y: 0 } : {}}
+            animate={!isLocked ? { opacity: 1, scale: 1, y: 0 } : {}}
             transition={{ duration: 1.2, ease: "easeOut", delay: 0.5 }}
             className="relative w-[180px] h-[180px] md:w-[280px] md:h-[280px] mb-8 md:mb-12"
           >
@@ -251,7 +250,7 @@ export default function Home() {
           <motion.button 
             onClick={enterVault}
             initial={{ opacity: 0, y: 20 }} 
-            animate={!loading ? { opacity: 1, y: 0 } : {}}
+            animate={!isLocked ? { opacity: 1, y: 0 } : {}}
             whileHover={{ scale: 1.05 }} 
             transition={{ duration: 0.5, delay: 1.2 }} 
             className="group relative bg-white text-black px-12 py-4 md:px-16 md:py-5 uppercase font-bold tracking-widest text-xs md:text-sm hover:bg-red-600 hover:text-white transition-all duration-300 overflow-hidden"
@@ -327,10 +326,6 @@ export default function Home() {
                     <div className="absolute top-4 left-4">
                       <span className="bg-black/80 backdrop-blur-md text-white px-3 py-1 text-[10px] font-bold uppercase tracking-widest border border-white/10 font-mono">{product.tag}</span>
                     </div>
-                    {/* Corner accents */}
-                    <div className="absolute top-0 right-0 w-3 h-3 border-t border-r border-red-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    <div className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-red-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    
                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                       <span className="bg-red-600 text-white px-8 py-3 text-xs font-bold uppercase tracking-widest hover:bg-white hover:text-black transition-colors">INITIATE</span>
                     </div>
@@ -354,6 +349,48 @@ export default function Home() {
           )}
         </div>
       </section>
+
+      {/* MANIFESTO MODAL */}
+      <AnimatePresence>
+        {manifestoOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setManifestoOpen(false)}
+            className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-2xl flex items-center justify-center p-6 cursor-pointer"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="max-w-2xl w-full border border-white/10 bg-zinc-900/50 p-8 md:p-16 relative overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-red-600 to-transparent"></div>
+              <div className="absolute top-4 right-4 text-[10px] text-zinc-500 font-mono">DOC_REF: 001-ALPHA</div>
+              
+              <div className="text-center">
+                <Crown className="w-12 h-12 text-red-600 mx-auto mb-8" />
+                <h2 className="text-3xl md:text-5xl font-black uppercase italic tracking-tighter mb-8 leading-none">
+                  The <span className="text-red-600">1%</span> Doctrine
+                </h2>
+                <div className="text-gray-300 font-mono text-xs md:text-sm leading-relaxed space-y-6 text-justify">
+                  <p><span className="text-red-600 font-bold">Mediocrity is a disease.</span> Blayzex is the cure. We do not design for the masses; we design for the obsessed.</p>
+                  <p>Every garment is a piece of engineering, stress-tested to endure the darkest places you go to find your light. We use materials usually reserved for tactical warfare, repurposed for your personal war against average.</p>
+                  <p>If you are looking for comfort, go elsewhere. If you are looking for equipment that respects your ambition, welcome home.</p>
+                </div>
+                <button 
+                  onClick={() => setManifestoOpen(false)}
+                  className="mt-12 text-red-600 text-[10px] font-bold uppercase tracking-[0.3em] hover:text-white transition-colors border-b border-transparent hover:border-white pb-1"
+                >
+                  [ ACKNOWLEDGE & CLOSE ]
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* MANIFESTO / ATHLETE SECTION */}
       <section className="relative py-20 md:py-32 bg-black overflow-hidden border-t border-white/10">
@@ -453,4 +490,3 @@ export default function Home() {
     </main>
   );
 }
-// Final V2

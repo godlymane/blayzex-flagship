@@ -5,6 +5,8 @@ import Navbar from "@/components/Navbar";
 import { Providers } from "./providers";
 import CartSidebar from "@/components/CartSidebar";
 
+<Script src="https://checkout.razorpay.com/v1/checkout.js" />
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
