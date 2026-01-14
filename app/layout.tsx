@@ -1,54 +1,67 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import Navbar from "../components/Navbar";
-import CartSidebar from "../components/CartSidebar";
-import { Providers } from "./providers";
-import Script from "next/script";
-import { ToastProvider } from "../context/ToastContext"; // New Import
+import type { Metadata, Viewport } from 'next';
+import { Inter, JetBrains_Mono } from 'next/font/google';
+import './globals.css';
+import Providers from './providers';
+import Navbar from '@/components/Navbar';
+import CartSidebar from '@/components/CartSidebar';
+import CustomCursor from '@/components/CustomCursor';
+import { ToastProvider } from '@/context/ToastContext';
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
+const mono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono' });
 
 export const metadata: Metadata = {
-  title: "BLAYZEX | Dominate Your Ambition",
-  description: "High-performance luxury aesthetic wear. Engineered for the 1%.",
-  icons: {
-    icon: '/favicon.ico', 
+  title: 'BLAYZEX | The 1%',
+  description: 'Exclusive Streetwear for the Elite. Engineered in Silence.',
+  openGraph: {
+    title: 'BLAYZEX | The 1%',
+    description: 'Exclusive Streetwear for the Elite.',
+    url: 'https://blayzex.com', // Replace with your actual URL
+    siteName: 'BLAYZEX',
+    images: [
+      {
+        url: '/opengraph-image.png', // Add this image to public folder
+        width: 1200,
+        height: 630,
+        alt: 'BLAYZEX - The 1% Standard',
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
   },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'BLAYZEX',
+    description: 'Engineered in Silence.',
+    creator: '@blayzex',
+  },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: '#000000',
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html lang="en" className="scroll-smooth">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-stone-950 text-stone-100`}
-      >
-        <Script src="https://checkout.razorpay.com/v1/checkout.js" />
-        
-        {/* Wrap ToastProvider INSIDE or OUTSIDE Providers depending on preference, 
-            but usually needs to wrap components using it. 
-            Since Providers wraps CartProvider which uses Toast, ToastProvider must be parent or inside Providers. 
-            Let's put it inside Providers for cleaner code in this file, or update Providers.tsx.
-            Actually, let's update this file to wrap Providers with ToastProvider. 
-        */}
+    <html lang="en" className={`${inter.variable} ${mono.variable}`}>
+      <body className="bg-black text-white antialiased overflow-x-hidden w-full max-w-[100vw]">
         <ToastProvider>
-            <Providers>
+          <Providers>
+            <CustomCursor />
             <Navbar />
             <CartSidebar />
-            {children}
-            </Providers>
+            <main className="min-h-screen pt-20 relative z-10">
+              {children}
+            </main>
+          </Providers>
         </ToastProvider>
       </body>
     </html>

@@ -1,4 +1,6 @@
-export const PRODUCTS = [
+import { Product } from '@/types';
+
+export const PRODUCTS: Product[] = [
   {
     id: "pump-cover-phantom",
     name: "Phantom Pump Cover",

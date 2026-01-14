@@ -1,17 +1,17 @@
 'use client';
 
-import { CartProvider, useCart } from '../context/CartContext';
+import { CartProvider, useCart } from '../context/CartContext'; 
 import { useEffect } from 'react';
 import Lenis from 'lenis';
 import CheckoutModal from '@/components/CheckoutModal';
 
-// Separate component to handle Modal rendering inside the Context
+// Separate component to use the hook inside the provider
 function ModalManager() {
     const { isCheckoutOpen, closeCheckout } = useCart();
     return <CheckoutModal isOpen={isCheckoutOpen} onClose={closeCheckout} />;
 }
 
-export function Providers({ children }: { children: React.ReactNode }) {
+export default function Providers({ children }: { children: React.ReactNode }) {
   
   useEffect(() => {
     const lenis = new Lenis({

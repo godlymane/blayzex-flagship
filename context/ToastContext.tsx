@@ -47,9 +47,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               animate={{ opacity: 1, x: 0, scale: 1 }}
               exit={{ opacity: 0, x: 20, scale: 0.9 }}
               layout
-              className="pointer-events-auto min-w-[300px] glass-panel bg-[#0a0a0a]/90 border-l-4 p-4 rounded-r-md shadow-2xl backdrop-blur-xl flex items-center justify-between gap-4"
+              className="pointer-events-auto min-w-[300px] bg-[#0a0a0a]/95 border-l-4 p-4 rounded-r-md shadow-2xl backdrop-blur-xl flex items-center justify-between gap-4 border-y border-r border-white/10"
               style={{
-                borderColor: toast.type === 'success' ? '#10b981' : toast.type === 'error' ? '#dc2626' : '#3b82f6'
+                borderColor: toast.type === 'success' ? '#10b981' : toast.type === 'error' ? '#dc2626' : '#3b82f6',
+                borderLeftColor: toast.type === 'success' ? '#10b981' : toast.type === 'error' ? '#dc2626' : '#3b82f6'
               }}
             >
               <div className="flex items-center gap-3">

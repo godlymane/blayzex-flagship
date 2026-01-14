@@ -1,16 +1,8 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useToast } from './ToastContext'; 
-
-type CartItem = {
-  id: string;       
-  name: string;
-  price: string;
-  image: string;
-  quantity: number;
-  size: string;     
-};
+import { useToast } from './ToastContext';
+import { CartItem } from '@/types'; 
 
 type CartContextType = {
   cart: CartItem[];
@@ -36,8 +28,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     setIsMounted(true);
+    // Load cart from local storage on mount
     const savedCart = localStorage.getItem('blayzex_cart');
-    if (savedCart) setCart(JSON.parse(savedCart));
+    if (savedCart) {
+        try {
+            setCart(JSON.parse(savedCart));
+        } catch (e) {
+            console.error("Failed to parse cart", e);
+        }
+    }
   }, []);
 
   useEffect(() => {
@@ -46,7 +45,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [cart, isMounted]);
 
-  const toggleCart = () => setCartOpen(!cartOpen);
+  const toggleCart = () => {
+    setCartOpen(prev => !prev);
+  };
 
   const addItemToCart = (product: Omit<CartItem, 'quantity'>) => {
     setCart((prev) => {
@@ -87,8 +88,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setIsCheckoutOpen(false);
   };
 
-  // FIX: Always render the Provider. 
-  // Rely on useEffect for data hydration instead of conditional rendering.
   return (
     <CartContext.Provider value={{ cart, cartOpen, isCheckoutOpen, toggleCart, addItemToCart, removeItemFromCart, clearCart, checkout, closeCheckout }}>
       {children}
