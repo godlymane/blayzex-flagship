@@ -7,7 +7,7 @@ import ProductCard from '@/components/ProductCard';
 import Preloader from '@/components/Preloader';
 import MagneticButton from '@/components/MagneticButton';
 import Footer from '@/components/Footer'; 
-import AccessGate from '@/components/AccessGate'; // THE GATE
+import AccessGate from '@/components/AccessGate'; 
 import { PRODUCTS, CATEGORIES } from '@/lib/data';
 import { Product } from '@/types';
 import { ArrowDown, Star } from 'lucide-react';
@@ -42,7 +42,7 @@ const DecryptText = ({ text, className }: { text: string, className?: string }) 
 // Infinite Marquee Component
 const Marquee = () => {
   return (
-    <div className="relative flex overflow-hidden py-4 md:py-6 bg-red-600 text-black border-y border-red-500">
+    <div className="relative flex overflow-hidden py-4 md:py-6 bg-red-600 text-black border-y border-red-500 select-none">
       <motion.div 
         className="flex gap-12 whitespace-nowrap"
         animate={{ x: [0, -1000] }}
@@ -66,10 +66,13 @@ const Marquee = () => {
 };
 
 // --- ISOLATED MAIN CONTENT COMPONENT ---
-// This prevents the "ref not hydrated" error by ensuring hooks run only when mounted
 function MainSiteContent() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [activeCategory, setActiveCategory] = useState("All");
+  
+  // Video Loading States
+  const [heroLoaded, setHeroLoaded] = useState(false);
+  const [manifestoLoaded, setManifestoLoaded] = useState(false);
   
   const containerRef = useRef(null);
   const { scrollYProgress } = useScroll({ target: containerRef });
@@ -89,21 +92,44 @@ function MainSiteContent() {
       <ProductModal product={selectedProduct} onClose={() => setSelectedProduct(null)} />
 
       {/* --- HERO SECTION --- */}
-      <section className="relative h-[100dvh] w-full overflow-hidden flex flex-col items-center justify-center border-b border-white/5 bg-zinc-900">
-        <div className="absolute inset-0 z-0 bg-black">
-          <video 
-            autoPlay 
-            loop 
-            muted 
-            playsInline
-            preload="auto"
-            className="w-full h-full object-cover opacity-60 scale-105"
-          >
-            <source src="/hero.mp4" type="video/mp4" />
-          </video>
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/60 z-20"></div>
-          <div className="absolute inset-0 bg-black/20 z-10"></div>
+      <section className="relative h-[100dvh] w-full overflow-hidden flex flex-col items-center justify-center border-b border-white/5 bg-[#050505]">
+        
+        {/* Background Layer with Buffering Indicator */}
+        <div className="absolute inset-0 z-0 bg-[#050505]">
+            {!heroLoaded && (
+                <div className="absolute inset-0 flex items-center justify-center z-10">
+                    {/* Minimalist Spinner */}
+                    <div className="w-8 h-8 border-2 border-white/10 border-t-red-600 rounded-full animate-spin backdrop-blur-md"></div>
+                </div>
+            )}
+            
+            <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: heroLoaded ? 0.6 : 0 }}
+                transition={{ duration: 1.5 }}
+                className="w-full h-full"
+            >
+              <video 
+                autoPlay 
+                loop 
+                muted 
+                playsInline
+                preload="auto"
+                onLoadedData={() => setHeroLoaded(true)}
+                className="w-full h-full object-cover scale-105"
+                poster="/logo.png" // Fallback image if video fails entirely
+              >
+                {/* Mobile Optimized Source (Vertical/Smaller) */}
+                <source src="/hero-mobile.mp4" type="video/mp4" media="(max-width: 768px)" />
+                {/* Desktop High-Res Source */}
+                <source src="/hero.mp4" type="video/mp4" />
+              </video>
+            </motion.div>
         </div>
+
+        {/* Gradients */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/60 z-20"></div>
+        <div className="absolute inset-0 bg-black/20 z-10"></div>
 
         <motion.div 
             style={{ y: heroTextY, opacity: heroOpacity }}
@@ -196,21 +222,38 @@ function MainSiteContent() {
       </section>
 
       {/* --- MANIFESTO --- */}
-      <section id="manifesto" className="relative w-full py-32 md:py-48 overflow-hidden border-t border-white/10 bg-zinc-950">
-        <div className="absolute inset-0 z-0 bg-black">
-          <video 
-            autoPlay 
-            loop 
-            muted 
-            playsInline
-            preload="auto"
-            className="w-full h-full object-cover opacity-30 grayscale"
-          >
-            <source src="/athletes.mp4" type="video/mp4" />
-          </video>
-          <div className="absolute inset-0 bg-black/60 z-10"></div>
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,black_100%)] z-10"></div>
+      <section id="manifesto" className="relative w-full py-32 md:py-48 overflow-hidden border-t border-white/10 bg-[#050505]">
+        
+        <div className="absolute inset-0 z-0 bg-[#050505]">
+            {!manifestoLoaded && (
+                <div className="absolute inset-0 flex items-center justify-center z-10">
+                    <div className="w-8 h-8 border-2 border-white/10 border-t-red-600 rounded-full animate-spin backdrop-blur-md"></div>
+                </div>
+            )}
+
+            <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: manifestoLoaded ? 0.3 : 0 }}
+                transition={{ duration: 1 }}
+                className="w-full h-full"
+            >
+              <video 
+                autoPlay 
+                loop 
+                muted 
+                playsInline
+                preload="auto"
+                onLoadedData={() => setManifestoLoaded(true)}
+                className="w-full h-full object-cover grayscale"
+              >
+                <source src="/athletes-mobile.mp4" type="video/mp4" media="(max-width: 768px)" />
+                <source src="/athletes.mp4" type="video/mp4" />
+              </video>
+            </motion.div>
         </div>
+        
+        <div className="absolute inset-0 bg-black/60 z-10"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,black_100%)] z-10"></div>
 
         <div className="relative z-20 max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-16 items-center w-full">
             <div className="order-2 md:order-1">
@@ -259,7 +302,9 @@ function MainSiteContent() {
         </div>
       </section>
 
+      {/* --- FOOTER COMPONENT --- */}
       <Footer />
+      
     </div>
   );
 }
