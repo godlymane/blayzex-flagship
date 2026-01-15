@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { ArrowRight, Check } from 'lucide-react';
+import { ArrowRight, Check, Instagram } from 'lucide-react';
 import Link from 'next/link';
 
 export default function Footer() {
@@ -16,34 +16,52 @@ export default function Footer() {
     if (!email) return;
     
     setStatus('loading');
-    // Simulate API call
     setTimeout(() => {
       setStatus('success');
       setEmail('');
     }, 1500);
   };
 
+  const handleScrollTo = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <footer className="bg-black border-t border-white/10 pt-24 pb-0 relative z-10 w-full overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 mb-24">
            <div className="grid grid-cols-2 md:grid-cols-4 gap-12 text-[10px] uppercase tracking-widest font-mono text-zinc-500">
+              
+              {/* Navigation */}
               <div className="flex flex-col gap-4">
                 <span className="text-white font-bold mb-2">Navigation</span>
-                <button onClick={() => document.getElementById('shop')?.scrollIntoView({behavior: 'smooth'})} className="text-left hover:text-red-600 transition-colors">The Drop</button>
-                <button onClick={() => document.getElementById('manifesto')?.scrollIntoView({behavior: 'smooth'})} className="text-left hover:text-red-600 transition-colors">Manifesto</button>
+                <button onClick={() => handleScrollTo('shop')} className="text-left hover:text-red-600 transition-colors">The Drop</button>
+                <button onClick={() => handleScrollTo('manifesto')} className="text-left hover:text-red-600 transition-colors">Manifesto</button>
               </div>
+
+              {/* Legal - Links to the new page */}
               <div className="flex flex-col gap-4">
-                <span className="text-white font-bold mb-2">Legal</span>
+                <span className="text-white font-bold mb-2">Legal Protocol</span>
                 <Link href="/legal" className="hover:text-red-600 transition-colors">Terms of Engagement</Link>
-                <Link href="/legal" className="hover:text-red-600 transition-colors">Privacy Protocol</Link>
+                <Link href="/legal" className="hover:text-red-600 transition-colors">Privacy Policy</Link>
               </div>
+
+              {/* Socials - Cleaned up for Blayzex only */}
               <div className="flex flex-col gap-4">
-                <span className="text-white font-bold mb-2">Socials</span>
-                <a href="#" className="hover:text-red-600 transition-colors">Instagram</a>
-                <a href="#" className="hover:text-red-600 transition-colors">Twitter</a>
+                <span className="text-white font-bold mb-2">Comms</span>
+                <a 
+                    href="https://www.instagram.com/blayzex._?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="hover:text-red-600 transition-colors flex items-center gap-2"
+                >
+                    <Instagram size={12} /> Instagram
+                </a>
               </div>
               
-              {/* Functional Newsletter */}
+              {/* Newsletter */}
               <div className="flex flex-col gap-4">
                  <span className="text-white font-bold mb-2">Intel Feed</span>
                  <form onSubmit={handleSubscribe} className="flex border-b border-zinc-800 pb-2 relative">

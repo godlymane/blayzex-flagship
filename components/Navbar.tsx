@@ -20,42 +20,21 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // --- HARD SCROLL LOCK FOR MOBILE MENU ---
+  // Menu Toggle Logic
   useEffect(() => {
     if (mobileMenuOpen) {
-      const scrollY = window.scrollY;
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = '100%';
       document.body.style.overflow = 'hidden';
-      document.body.style.touchAction = 'none'; // Disable touch
     } else {
-      const scrollY = document.body.style.top;
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
       document.body.style.overflow = '';
-      document.body.style.touchAction = '';
-      window.scrollTo(0, parseInt(scrollY || '0') * -1);
-    }
-    
-    return () => {
-       document.body.style.position = '';
-       document.body.style.top = '';
-       document.body.style.width = '';
-       document.body.style.overflow = '';
-       document.body.style.touchAction = '';
     }
   }, [mobileMenuOpen]);
 
-  // --- LISTEN FOR MODAL SIGNALS ---
+  // Listen for Modal Signals
   useEffect(() => {
     const handleModalOpen = () => setIsHidden(true);
     const handleModalClose = () => setIsHidden(false);
-
     window.addEventListener('modal-open', handleModalOpen);
     window.addEventListener('modal-close', handleModalClose);
-
     return () => {
       window.removeEventListener('modal-open', handleModalOpen);
       window.removeEventListener('modal-close', handleModalClose);
@@ -76,7 +55,6 @@ export default function Navbar() {
     }
   };
 
-  // If menu is open, FORCE navbar to be visible
   const shouldHide = isHidden && !mobileMenuOpen;
 
   return (
@@ -89,9 +67,10 @@ export default function Navbar() {
             width: isScrolled ? "90%" : "95%", 
         }}
         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        // HYPER GLASS STYLE
         className={`fixed top-4 md:top-6 left-1/2 -translate-x-1/2 z-[60] h-16 md:h-20 rounded-full flex items-center transition-all duration-500 max-w-5xl
             ${isScrolled || mobileMenuOpen
-                ? 'bg-[#0a0a0a]/90 backdrop-blur-md border border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.5)]' 
+                ? 'bg-white/5 backdrop-blur-3xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.3)]' 
                 : 'bg-transparent border border-transparent'
             }
         `}
@@ -104,7 +83,7 @@ export default function Navbar() {
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="group flex items-center gap-3 text-white focus:outline-none"
              >
-                <div className="relative w-10 h-10 border border-white/10 rounded-full flex items-center justify-center overflow-hidden group-hover:border-red-600 transition-all bg-white/5 backdrop-blur-sm active:scale-95">
+                <div className="relative w-10 h-10 border border-white/10 rounded-full flex items-center justify-center overflow-hidden group-hover:border-red-600 transition-all bg-white/5 backdrop-blur-md active:scale-95">
                     <AnimatePresence mode="wait">
                         {mobileMenuOpen ? (
                             <motion.div key="close" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }}>
@@ -117,7 +96,7 @@ export default function Navbar() {
                         )}
                     </AnimatePresence>
                 </div>
-                <span className="hidden md:flex items-center gap-2 text-[9px] font-mono text-zinc-500 uppercase tracking-widest group-hover:text-white transition-colors">
+                <span className="hidden md:flex items-center gap-2 text-[9px] font-mono text-zinc-400 uppercase tracking-widest group-hover:text-white transition-colors">
                      <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
                      CMD
                 </span>
@@ -145,7 +124,7 @@ export default function Navbar() {
               onClick={toggleCart} 
               className="relative group text-white focus:outline-none flex items-center gap-3"
             >
-              <div className="relative w-10 h-10 bg-white/5 border border-white/10 rounded-full flex items-center justify-center group-hover:bg-red-600 group-hover:border-red-600 group-hover:text-black transition-all duration-300 shadow-sm active:scale-95">
+              <div className="relative w-10 h-10 bg-white/5 border border-white/10 rounded-full flex items-center justify-center group-hover:bg-red-600 group-hover:border-red-600 group-hover:text-black transition-all duration-300 shadow-sm active:scale-95 backdrop-blur-md">
                 <ShoppingBag size={18} />
                 {totalItems > 0 && (
                     <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[9px] font-black text-black border border-black shadow-lg">
@@ -166,12 +145,12 @@ export default function Navbar() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-[50] bg-black flex flex-col"
+            className="fixed inset-0 z-[50] bg-black/95 backdrop-blur-2xl flex flex-col"
           >
-             {/* REDUNDANT CLOSE BUTTON (Top Right) - Ensures user can always exit */}
+             {/* REDUNDANT CLOSE BUTTON (Top Right) */}
              <button 
                 onClick={() => setMobileMenuOpen(false)}
-                className="absolute top-6 right-6 z-[60] w-12 h-12 flex md:hidden items-center justify-center rounded-full bg-zinc-900 border border-white/10 text-white active:scale-90 transition-transform"
+                className="absolute top-6 right-6 z-[70] w-12 h-12 flex md:hidden items-center justify-center rounded-full bg-white/10 border border-white/10 text-white active:scale-90 transition-transform backdrop-blur-md"
              >
                  <X size={24} />
              </button>
@@ -181,18 +160,19 @@ export default function Navbar() {
                  <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150"></div>
              </div>
              
-             {/* Content Container */}
-             <div className="relative z-10 flex flex-col justify-center items-center h-full gap-8 p-6">
+             {/* Content Container - REFINED TYPOGRAPHY */}
+             <div className="relative z-10 flex flex-col justify-center items-center h-full gap-6 p-6">
                 {['Shop All', 'New Arrivals'].map((item, i) => (
                     <motion.div
                         key={item}
-                        initial={{ y: 40, opacity: 0 }}
+                        initial={{ y: 30, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ delay: 0.1 + i * 0.1, duration: 0.4, ease: "easeOut" }}
                     >
                         <Link 
                             href="#" 
-                            className="block text-4xl md:text-7xl font-black uppercase italic tracking-tighter text-transparent stroke-text hover:text-white hover:stroke-0 transition-all duration-300 hover:scale-105 active:scale-95"
+                            // SCALED DOWN TEXT FOR CLEANER LOOK
+                            className="block text-3xl md:text-5xl font-bold uppercase tracking-[0.1em] text-transparent stroke-text hover:text-white hover:stroke-0 transition-all duration-300 hover:scale-105 active:scale-95"
                             onClick={() => setMobileMenuOpen(false)}
                         >
                             {item}
@@ -202,13 +182,13 @@ export default function Navbar() {
                 
                 {/* READ MANIFESTO */}
                  <motion.div
-                    initial={{ y: 40, opacity: 0 }}
+                    initial={{ y: 30, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.3, duration: 0.4, ease: "easeOut" }}
                 >
                     <button 
                         onClick={handleManifestoClick}
-                        className="block text-4xl md:text-7xl font-black uppercase italic tracking-tighter text-white transition-all duration-300 hover:text-red-600 hover:scale-105 active:scale-95"
+                        className="block text-3xl md:text-5xl font-bold uppercase tracking-[0.1em] text-white transition-all duration-300 hover:text-red-600 hover:scale-105 active:scale-95"
                     >
                         Read Manifesto
                     </button>
@@ -218,13 +198,13 @@ export default function Navbar() {
                  {['Account', 'Support'].map((item, i) => (
                     <motion.div
                         key={item}
-                        initial={{ y: 40, opacity: 0 }}
+                        initial={{ y: 30, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ delay: 0.4 + i * 0.1, duration: 0.4, ease: "easeOut" }}
                     >
                          <Link 
                             href="#" 
-                            className="block text-4xl md:text-7xl font-black uppercase italic tracking-tighter text-transparent stroke-text hover:text-white hover:stroke-0 transition-all duration-300 hover:scale-105 active:scale-95"
+                            className="block text-3xl md:text-5xl font-bold uppercase tracking-[0.1em] text-transparent stroke-text hover:text-white hover:stroke-0 transition-all duration-300 hover:scale-105 active:scale-95"
                             onClick={() => setMobileMenuOpen(false)}
                         >
                             {item}
@@ -239,7 +219,7 @@ export default function Navbar() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.6 }}
-                className="relative z-10 p-8 border-t border-white/5 flex justify-between items-end bg-black/50 backdrop-blur-md w-full"
+                className="relative z-10 p-8 border-t border-white/5 flex justify-between items-end bg-black/20 backdrop-blur-md w-full"
              >
                 <div className="flex flex-col gap-1">
                     <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest">System Status</span>

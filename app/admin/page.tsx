@@ -2,108 +2,72 @@
 
 import React, { useState, useEffect } from 'react';
 import { db } from '@/lib/firebase';
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth'; // Auth Imports
-import { collection, query, orderBy, onSnapshot, updateDoc, doc } from 'firebase/firestore';
-import { Package, CheckCircle, Truck, Shield, AlertTriangle, LogOut } from 'lucide-react';
-import { useToast } from '@/context/ToastContext';
-import { Order } from '@/types';
+import { collection, query, orderBy, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { Lock, Package, Check, Clock, Phone, MapPin } from 'lucide-react';
 
-export default function AdminPage() {
-  const [user, setUser] = useState<any>(null);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [orders, setOrders] = useState<Order[]>([]);
+const ADMIN_PASS = "BLAYZEXOWNER"; // CHANGE THIS PASSWORD
+
+export default function AdminDashboard() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [passInput, setPassInput] = useState("");
+  const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const { showToast } = useToast();
-  
-  const auth = getAuth();
 
-  // Listen for auth state changes
-  useEffect(() => {
-      const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-          setUser(currentUser);
-          if(!currentUser) setLoading(false);
-      });
-      return () => unsubscribe();
-  }, [auth]);
+  // Auth Handler
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passInput === ADMIN_PASS) {
+      setIsAuthenticated(true);
+      fetchOrders();
+    } else {
+      alert("ACCESS DENIED");
+    }
+  };
 
-  // Fetch orders only if authenticated
-  useEffect(() => {
-    if (!user) return;
-
-    const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const ordersData = snapshot.docs.map(doc => ({
+  // Fetch Orders from Firebase
+  const fetchOrders = async () => {
+    setLoading(true);
+    try {
+      const q = query(collection(db, "orders"), orderBy("timestamp", "desc"));
+      const querySnapshot = await getDocs(q);
+      const ordersData = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
-      })) as Order[];
+      }));
       setOrders(ordersData);
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, [user]);
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-        await signInWithEmailAndPassword(auth, email, password);
-        showToast("Authenticated", "success");
     } catch (error) {
-        showToast("Invalid Credentials", "error");
+      console.error("Error fetching orders:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleLogout = async () => {
-      await signOut(auth);
-  };
-
-  const updateStatus = async (orderId: string, newStatus: string) => {
+  // Update Status (Pending -> Shipped)
+  const markAsShipped = async (orderId: string) => {
     try {
-      if(!orderId) return;
       const orderRef = doc(db, "orders", orderId);
-      await updateDoc(orderRef, { status: newStatus });
-      showToast(`Order Status Updated: ${newStatus}`, "success");
+      await updateDoc(orderRef, { fulfillmentStatus: "shipped" });
+      fetchOrders(); // Refresh UI
     } catch (error) {
       console.error("Error updating status:", error);
-      showToast("Failed to update status", "error");
     }
   };
 
-  const formatDate = (timestamp: any) => {
-      if(!timestamp) return "Processing...";
-      if(timestamp.seconds) return new Date(timestamp.seconds * 1000).toLocaleDateString();
-      return "N/A";
-  };
-
-  const totalRevenue = orders.reduce((sum, order) => sum + (order.total || 0), 0);
-
-  if (!user) {
+  if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center p-4 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-20 pointer-events-none bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-red-900/20 via-black to-black"></div>
-        
-        <form onSubmit={handleLogin} className="glass-panel w-full max-w-sm p-10 rounded-2xl text-center relative z-10 border-t border-red-900/50">
-          <Shield className="w-16 h-16 text-red-600 mx-auto mb-6 opacity-80" />
-          <h1 className="text-2xl font-black text-white mb-2 uppercase tracking-[0.2em]">Command <span className="text-red-600">Ops</span></h1>
-          <p className="text-xs text-gray-500 font-mono mb-8">SECURE FIREBASE AUTHENTICATION</p>
-          
-          <input 
-            type="email" 
-            placeholder="ADMIN EMAIL" 
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full bg-black/50 border border-white/10 p-4 text-white text-center focus:border-red-600 outline-none mb-4 rounded-lg font-mono tracking-widest transition-colors placeholder-gray-700"
-          />
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <form onSubmit={handleLogin} className="flex flex-col gap-4 text-center">
+          <Lock className="mx-auto text-red-600 mb-2" size={32} />
+          <h1 className="text-white font-mono uppercase tracking-widest">Admin Clearance</h1>
           <input 
             type="password" 
-            placeholder="PASSWORD" 
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full bg-black/50 border border-white/10 p-4 text-white text-center focus:border-red-600 outline-none mb-6 rounded-lg font-mono tracking-widest transition-colors placeholder-gray-700"
+            value={passInput}
+            onChange={(e) => setPassInput(e.target.value)}
+            className="bg-zinc-900 border border-zinc-800 text-white p-3 text-center uppercase tracking-widest outline-none focus:border-red-600"
+            placeholder="PASSWORD"
           />
-          <button type="submit" className="w-full bg-white text-black py-4 font-bold uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all rounded-lg text-xs">
-            Authenticate
+          <button className="bg-white text-black font-bold p-3 hover:bg-red-600 hover:text-white transition-colors">
+            ENTER
           </button>
         </form>
       </div>
@@ -111,129 +75,80 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white p-6 md:p-12 font-mono relative">
-      <div className="fixed top-0 left-0 w-full h-96 bg-red-900/10 blur-[120px] pointer-events-none"></div>
+    <div className="min-h-screen bg-black text-white p-6 md:p-12 font-mono">
+      <div className="flex justify-between items-center mb-12 border-b border-white/10 pb-6">
+        <h1 className="text-2xl md:text-4xl font-bold uppercase tracking-tighter">
+          Command Center <span className="text-red-600">.</span>
+        </h1>
+        <div className="text-xs text-zinc-500 text-right">
+          <p>TOTAL ORDERS: {orders.length}</p>
+          <p>REVENUE: ₹{orders.reduce((acc, order) => acc + (order.amount || 0), 0).toLocaleString()}</p>
+        </div>
+      </div>
 
-      <div className="max-w-7xl mx-auto relative z-10">
-        <header className="glass-panel rounded-2xl p-8 mb-12 flex flex-col md:flex-row justify-between items-start md:items-end backdrop-blur-3xl border border-white/5">
-          <div>
-            <h1 className="text-4xl font-black uppercase tracking-tighter text-white leading-none">
-              Blayzex <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-red-800">Ops</span>
-            </h1>
-            <p className="text-[10px] text-gray-400 mt-3 tracking-[0.3em] uppercase flex items-center gap-2">
-              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_#22c55e]"></span>
-              Authorized: {user.email}
-            </p>
-          </div>
-          <div className="flex flex-col items-end gap-4 mt-6 md:mt-0">
-            <div className="text-right">
-                <p className="text-[10px] text-gray-500 mb-1 tracking-widest uppercase">Total Revenue</p>
-                <p className="text-3xl font-bold text-white tabular-nums tracking-tight">₹{totalRevenue.toLocaleString('en-IN')}</p>
-            </div>
-            <button onClick={handleLogout} className="flex items-center gap-2 text-[10px] uppercase font-bold text-red-500 hover:text-white transition-colors">
-                <LogOut size={12} /> Terminate Session
-            </button>
-          </div>
-        </header>
-
+      <div className="space-y-6">
         {loading ? (
-          <div className="text-center py-20 text-gray-600 animate-pulse flex flex-col items-center">
-             <AlertTriangle className="mb-4 text-red-600" />
-             INITIALIZING DATA STREAM...
-          </div>
-        ) : (
-          <div className="grid gap-6">
-            {orders.map((order) => (
-              <div key={order.id} className="glass-panel p-8 rounded-xl group hover:border-red-600/30 transition-all duration-500">
-                <div className="flex flex-col md:flex-row justify-between mb-8 pb-6 border-b border-white/5 gap-4">
-                  <div>
-                    <div className="flex items-center gap-4 mb-2">
-                      <span className="text-xl font-bold text-white tracking-wide">{order.customer?.name || "Unknown"}</span>
-                      <span className={`px-3 py-1 text-[9px] font-bold uppercase tracking-widest rounded-full border ${
-                        order.status === 'PAID' ? 'border-yellow-500/30 text-yellow-500 bg-yellow-500/5' : 
-                        order.status === 'SHIPPED' ? 'border-blue-500/30 text-blue-500 bg-blue-500/5' : 
-                        'border-green-500/30 text-green-500 bg-green-500/5'
-                      }`}>
-                        {order.status}
-                      </span>
-                    </div>
-                    <div className="flex gap-4 text-[10px] text-gray-500 font-sans tracking-wide">
-                      <span>{order.customer?.email}</span>
-                      <span>//</span>
-                      <span>{order.customer?.phone}</span>
-                    </div>
-                    <p className="text-[9px] text-gray-600 mt-2 font-mono">{order.id}</p>
+          <p>Fetching satellite data...</p>
+        ) : orders.map((order) => (
+          <div key={order.id} className="bg-zinc-900/30 border border-white/5 p-6 rounded-sm relative group hover:border-white/20 transition-all">
+            
+            {/* Header: ID & Status */}
+            <div className="flex justify-between items-start mb-6">
+               <div>
+                  <span className="text-[10px] text-zinc-500 uppercase tracking-widest">Order ID: {order.orderId}</span>
+                  <div className="text-xl font-bold mt-1 text-white">{order.customer.name}</div>
+                  <div className="flex items-center gap-2 text-xs text-zinc-400 mt-1">
+                     <Phone size={12} /> {order.customer.phone}
                   </div>
-                  
-                  <div className="text-right">
-                    <p className="text-2xl font-bold text-white tabular-nums">₹{order.total?.toLocaleString('en-IN')}</p>
-                    <p className="text-[10px] text-gray-500 mt-1 uppercase tracking-widest">
-                      {formatDate(order.createdAt)}
-                    </p>
+               </div>
+               <div className="text-right">
+                  <div className={`text-xs font-bold uppercase tracking-widest px-3 py-1 border ${order.fulfillmentStatus === 'shipped' ? 'border-green-500 text-green-500' : 'border-yellow-500 text-yellow-500'}`}>
+                      {order.fulfillmentStatus || 'PENDING'}
                   </div>
-                </div>
+                  <div className="text-sm font-bold text-white mt-2">₹{order.amount}</div>
+               </div>
+            </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                  {/* Items */}
-                  <div>
-                    <h4 className="text-[9px] uppercase tracking-[0.2em] text-gray-500 mb-4 flex items-center gap-2">
-                      <Package size={10} /> Manifest
-                    </h4>
-                    <div className="space-y-4">
-                      {order.items?.map((item: any, idx: number) => (
-                        <div key={idx} className="flex justify-between text-sm items-center bg-white/5 p-3 rounded-lg border border-white/5">
-                          <span className="text-gray-200 font-medium">{item.name}</span>
-                          <div className="flex items-center gap-3">
-                            <span className="text-xs text-gray-500">Qty {item.quantity}</span>
-                            <span className="bg-white text-black text-[10px] font-bold px-2 py-1 rounded-sm uppercase">{item.size}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+            {/* Grid: Logistics & Items */}
+            <div className="grid md:grid-cols-2 gap-8">
+               
+               {/* Logistics Info */}
+               <div className="text-xs text-zinc-400 space-y-2">
+                  <div className="flex items-start gap-2">
+                     <MapPin size={14} className="mt-0.5 text-red-600" />
+                     <div>
+                        <p>{order.customer.address}</p>
+                        <p>{order.customer.city}, {order.customer.state}</p>
+                        <p className="font-bold text-white">{order.customer.pincode}</p>
+                     </div>
                   </div>
+               </div>
 
-                  {/* Shipping */}
-                  <div>
-                    <h4 className="text-[9px] uppercase tracking-[0.2em] text-gray-500 mb-4 flex items-center gap-2">
-                      <Truck size={10} /> Destination
-                    </h4>
-                    <div className="bg-white/5 p-4 rounded-lg border border-white/5 text-sm text-gray-300 leading-relaxed font-sans">
-                      <p>{order.customer?.address}</p>
-                      <p className="mt-1">{order.customer?.city}, {order.customer?.state}</p>
-                      <p className="text-white font-bold mt-2 font-mono">{order.customer?.pincode}</p>
-                    </div>
-                  </div>
-                </div>
+               {/* Items List */}
+               <div className="space-y-2">
+                  {order.items.map((item: any, idx: number) => (
+                      <div key={idx} className="flex justify-between items-center text-xs border-b border-white/5 pb-2">
+                          <span className="text-white font-bold">{item.name}</span>
+                          <span className="text-zinc-500">{item.size} x {item.quantity}</span>
+                      </div>
+                  ))}
+               </div>
+            </div>
 
-                {/* Actions */}
-                <div className="mt-8 pt-6 border-t border-white/5 flex gap-4 opacity-50 group-hover:opacity-100 transition-opacity">
-                  {order.status !== 'SHIPPED' && order.id && (
+            {/* Actions */}
+            {order.fulfillmentStatus !== 'shipped' && (
+                <div className="mt-6 pt-6 border-t border-white/5 flex justify-end">
                     <button 
-                      onClick={() => updateStatus(order.id!, 'SHIPPED')}
-                      className="flex items-center gap-2 bg-blue-500/10 text-blue-400 border border-blue-500/20 px-6 py-3 text-[10px] font-bold uppercase hover:bg-blue-500 hover:text-white hover:border-blue-500 transition-all rounded-lg tracking-widest"
+                        onClick={() => markAsShipped(order.id)}
+                        className="flex items-center gap-2 bg-white text-black px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:bg-green-500 transition-colors"
                     >
-                      <Truck size={12} /> Dispatch
+                        <Package size={14} /> Mark Shipped
                     </button>
-                  )}
-                  {order.status !== 'DELIVERED' && order.id && (
-                    <button 
-                      onClick={() => updateStatus(order.id!, 'DELIVERED')}
-                      className="flex items-center gap-2 bg-green-500/10 text-green-400 border border-green-500/20 px-6 py-3 text-[10px] font-bold uppercase hover:bg-green-500 hover:text-white hover:border-green-500 transition-all rounded-lg tracking-widest"
-                    >
-                      <CheckCircle size={12} /> Complete
-                    </button>
-                  )}
                 </div>
-              </div>
-            ))}
-
-            {orders.length === 0 && (
-              <div className="text-center py-32 text-gray-600 glass-panel rounded-xl border-dashed">
-                <p className="tracking-widest uppercase text-xs">Awaiting Initial Drop Data...</p>
-              </div>
             )}
+
           </div>
-        )}
+        ))}
       </div>
     </div>
   );
